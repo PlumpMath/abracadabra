@@ -10,11 +10,16 @@ this project becomes a Leiningen template.
 Build latest dependencies (these will be released soon to clojars.org, making this step redundant)
 
     git clone https://github.com/juxt/modular.git
+    cd modular
     lein install-all
+    cd ..
 
     git clone https://github.com/juxt/cylon.git
+    cd cylon
     lein install
+    cd ..
 
+    git clone https://github.com/malcolmsparks/abracadabra.git
     cd abracadabra
     lein repl
     user> (go)
