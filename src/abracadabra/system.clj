@@ -63,7 +63,7 @@
    (make new-default-protection-system config
          :password-file (io/file (System/getProperty "user.home") ".abracadabra-passwords.edn"))
 
-   :home-routes (new-main-routes)
+   :main-routes (new-main-routes)
    :api-routes (new-api-routes)
    :html-template (make new-template config :template "templates/page.html.mustache")
    :module-a (make new-module-a-pages)
