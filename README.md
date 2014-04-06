@@ -5,7 +5,7 @@ Work in progress, will eventually become a lein-template.
 The name abracadabra was chosen to be easy to search-and-replace when
 this project becomes a Leiningen template.
 
-# Set up
+# Prep
 
 Build latest dependencies (these will be released soon to clojars.org, making this step redundant)
 
@@ -18,6 +18,8 @@ Build latest dependencies (these will be released soon to clojars.org, making th
     cd cylon
     lein install
     cd ..
+
+# Go
 
     git clone https://github.com/malcolmsparks/abracadabra.git
     cd abracadabra
