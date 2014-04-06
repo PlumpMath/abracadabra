@@ -24,7 +24,7 @@
    [clojure.tools.reader.reader-types :refer (indexing-push-back-reader)]
 
    [modular.http-kit :refer (new-webserver)]
-   [modular.bidi :refer (new-bidi-ring-handler-provider BidiRoutesProvider)]
+   [modular.bidi :refer (new-bidi-ring-handler-provider)]
    [modular.core :refer (make make-args interpose-component merge-dependencies)]
 
    [modular.index :refer (add-index-dependencies)]
