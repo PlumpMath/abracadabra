@@ -27,6 +27,10 @@ Build latest dependencies (these will be released soon to clojars.org, making th
     user> (go)
     user> (reset)
     user> (reset)
+    user> (reset)
+    user> (reset)
+    user> (reset) ; you get the idea
+
 
 Browse at http://localhost:3000.
 
