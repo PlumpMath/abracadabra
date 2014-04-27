@@ -16,15 +16,15 @@
   abracadabra.module-a
   (:require
    [bidi.bidi :refer (path-for)]
-   [modular.bidi :refer (BidiRoutesProvider)]
-   [abracadabra.menu :refer (MenuItems)]
-   [abracadabra.template :refer (wrap-template)]
+   [modular.bidi :refer (WebService)]
+   [modular.menu :refer (MenuItems)]
+   [modular.template :refer (wrap-template)]
    [hiccup.core :refer (html)]
    [com.stuartsierra.component :as component]))
 
 ;; We'll start by defining 2 pages.
 
-(defn make-page-a1 [handlers]
+(defn make-page-a1 []
   (wrap-template
    ;; See modular.bidi documentation for how routes and assoc'd with the request
    (fn [{routes :modular.bidi/routes :as req}]
@@ -35,10 +35,10 @@
         ;; Example: How to use path-for to construct a URL to another
         ;; handler. Note the absence of a forward declaration of
         ;; feature-a2.
-        [:p "Here is a (generated) link to " [:a {:href (path-for routes (:page-2 @handlers))} "page A2"]]
+        [:p "Here is a (generated) link to " [:a {:href (path-for routes :page-2)} "page A2"]]
         [:p "Edit this code in " [:tt "src/abracadabra/module_a.clj"]]])})))
 
-(defn make-page-a2 [handlers]
+(defn make-page-a2 []
   (wrap-template
    ;; This is not a Ring handler, it is 'template data' that becomes a
    ;; Ring handler by being wrapped by wrap-template. Template data can
@@ -48,7 +48,10 @@
              [:div
               [:h3 "Page A2"]
               [:p "Edit this code in " [:tt "src/abracadabra/module_a.clj"]]])
-      :title "Look how this page changed the title"})))
+      ;; We can also return maps that will be merged with the template
+      ;; data of other contributing components. Here we must use (and
+      ;; know) the component key as the component is known by the templater.
+      :title {:title-text "Look how this page changed the title"}})))
 
 (defn make-handlers
   "Make handlers for module A"
@@ -63,18 +66,15 @@
   ;; before any HTTP requests are made. This pattern of delivering the
   ;; promise inside the function body ensures that an unrealized promise
   ;; doesn't escape.
-  (let [p (promise)]
-    @(deliver p
-              {:page-1 (make-page-a1 p)
-
-               :page-2 (make-page-a2 p)
-
-               :page-3
-               ;; An anonymous handler. Bidi can route to these as well.
-               (fn [req]
-                 {:status 200
-                  :headers {"Content-Type" "text/plain"}
-                  :body "Look, no boilerplate!\nEdit this code in src/abracadabra/module_a.clj"})})))
+  {:page-1 (make-page-a1)
+   :page-2 (make-page-a2)
+   :page-3
+   ;; An anonymous handler. Bidi can route to these as well.
+   (fn [{routes :modular.bidi/routes :as req}]
+     {:body (html [:div
+                   [:p "Look, no boilerplate!"]
+                   [:p "Edit this code in src/abracadabra/module_a.clj"]
+                   [:p [:a {:href (path-for routes [:main-routes :index])} "Home"]]])})})
 
 ;; Now we create a component. This is a record defined by the protocols
 ;; it satisfies. Modules provide multiple components if necessary. We
@@ -89,33 +89,26 @@
     (assoc this :handlers (make-handlers)))
   (stop [this] this)
 
-  BidiRoutesProvider ; this protocol lets us contribute bidi routes
-  (routes [{:keys [handlers]}]
+  WebService ; this protocol lets us contribute bidi routes
+  (ring-handler-map [this] (:handlers this))
+  (routes [this]
     ;; We return a bidi route structure that associates routes to
     ;; handlers. Each module contributes routes into the application's
     ;; URI tree by satisfying this BidiRoutesProvider provider. (The
     ;; design supports a CompojureRoutesProvider, a PR would be welcome!)
-    ["/" [["a1" (:page-1 handlers)]
-          ["a2" (:page-2 handlers)]
-          ["a3" (:page-3 handlers)]
-          ]])
+    ["/" {"a1" :page-1
+          "a2" :page-2
+          "a3" :page-3}])
   ;; If there is no web context under which these route will be mounted,
   ;; return nil or an empty string here. So, putting it altogether,
   ;; "/example-module" + "/" + "a1" = "/example-module/a1".
-  (context [this] "/example-module")
+  (uri-context [this] "/example-module")
 
   MenuItems ; this protocol lets us contribute
-  (menu-items [this]
-    (let [handlers (:handlers this)]
-      [{:label "Menu item 1"
-        :order "A1"
-        :handler (:page-1 handlers)}
-       {:label "Menu item 2"
-        :order "A2"
-        :handler (:page-2 handlers)}
-       {:label "Menu item 3"
-        :order "A3"
-        :handler (:page-3 handlers)}])))
+  (menu-items [_ context]
+    [{:label "Menu item 1" :order "A1" :href :page-1}
+     {:label "Menu item 2" :order "A2" :href :page-2}
+     {:label "Menu item 3" :order "A3" :href :page-3}]))
 
 ;; By convention, each component has one or more constructors, prefixed
 ;; with 'new-'.

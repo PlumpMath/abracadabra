@@ -8,7 +8,7 @@
     <meta property="dc:title" content="Jig"/>
     <meta property="dc:description" content="Jig is an application harness providing a beautifully interactive development experience for Clojure projects"/>
 
-    <title>{{title}}</title>
+    <title>{{title.title-text}}</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/bootstrap.min.css" rel="stylesheet">
@@ -32,15 +32,15 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <span class="navbar-brand"><a href="{{title-link}}">{{app-name}}</a></span>
+        <span class="navbar-brand"><a href="{{main-routes.home-href}}">{{title.app-name}}</a></span>
       </div>
 
       <!-- Collect the nav links, forms, and other content for toggling -->
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
-          {{#menu}}
+          {{#menu.menu}}
           {{{listitem}}}
-          {{/menu}}
+          {{/menu.menu}}
         </ul>
       </div>
     </nav>
@@ -53,6 +53,11 @@
     <script src="/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="/bootstrap.min.js"></script>
+
+    <!-- Javascripts that have been contributed by other modules -->
+    {{#cljs-builder.javascripts}}
+    <script src="{{{.}}}" type="text/javascript"></script>
+    {{/cljs-builder.javascripts}}
 
   </body>
 </html>

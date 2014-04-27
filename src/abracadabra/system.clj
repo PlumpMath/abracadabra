@@ -22,20 +22,25 @@
    [clojure.java.io :as io]
    [clojure.tools.reader :refer (read)]
    [clojure.tools.reader.reader-types :refer (indexing-push-back-reader)]
+   [clojure.string :as str]
 
    [modular.http-kit :refer (new-webserver)]
-   [modular.bidi :refer (new-bidi-ring-handler-provider)]
-   [modular.core :refer (make make-args interpose-component merge-dependencies)]
+   [modular.ring :refer (new-ring-binder RingBinding)]
+   [modular.bidi :refer (new-router WebService)]
+   [modular.maker :refer (make)]
+   [modular.wire-up :refer (autowire-dependencies-satisfying)]
+   [modular.clostache :refer (new-clostache-templater)]
+   [modular.template :refer (new-single-template new-template-model-contributor TemplateModel)]
+   [modular.menu :refer (new-menu-index MenuItems)]
+   [modular.cljs :refer (new-cljs-module new-cljs-builder ClojureScriptModule)]
 
-   [modular.index :refer (add-index-dependencies)]
-
-   [cylon.core :refer (new-default-protection-system)]
+   ;;[cylon.core :refer (new-default-protection-system)]
 
    [abracadabra.api :refer (new-api-routes)]
-   [abracadabra.menu :refer (new-menu-index MenuItems)]
-   [abracadabra.template :refer (new-template)]
+
    [abracadabra.web :refer (new-main-routes)]
-   [abracadabra.module-a :refer (new-module-a-pages)]))
+   [abracadabra.module-a :refer (new-module-a-pages)]
+   [abracadabra.module-b :refer (new-module-b-pages)]))
 
 (defn config
   "Return a map of the static configuration used in the component
@@ -57,28 +62,39 @@
 (defn new-system-map [config]
   (system-map
    :webserver (make new-webserver config :port nil)
-   :bidi-ring-handler (make new-bidi-ring-handler-provider)
+   :router (make new-router)
 
-   :protection-system
-   (make new-default-protection-system config
+   #_:protection-system
+   #_(make new-default-protection-system config
          :password-file (io/file (System/getProperty "user.home") ".abracadabra-passwords.edn"))
 
    :main-routes (new-main-routes)
    :api-routes (new-api-routes)
-   :html-template (make new-template config :template "templates/page.html.mustache")
+   :html-template (make new-single-template config :template "templates/page.html.mustache")
    :module-a (make new-module-a-pages)
+   :module-b (make new-module-b-pages)
    :menu (make new-menu-index)
+   :clostache (make new-clostache-templater)
+   :ring-binder (make new-ring-binder)
+
+   :title (make new-template-model-contributor config
+                :title-text (str/capitalize "abracadabra")
+                :app-name "abracadabra")
+
+   :cljs-core (new-cljs-module :name :cljs :mains ['cljs.core] :dependencies #{})
+   :cljs-main (new-cljs-module :name :abracadabra :mains ['abracadabra.main] :dependencies #{:cljs})
+   :cljs-builder (new-cljs-builder)
    ))
 
 (defn new-dependency-map [system-map]
-  (-> {}
-      (add-index-dependencies system-map)
-      (merge-dependencies {:html-template [:menu]})
-
-      ;; We interpose the template component between the webserver and its
-      ;; dependencies. That way, it can inject itself into every request
-      ;; delivered by the webserver.
-      (interpose-component :webserver :html-template)))
+  (-> {:webserver [:ring-binder]
+       :ring-binder {:ring-handler :router}
+       :html-template {:templater :clostache}}
+      (autowire-dependencies-satisfying system-map :router WebService)
+      (autowire-dependencies-satisfying system-map :ring-binder RingBinding)
+      (autowire-dependencies-satisfying system-map :html-template TemplateModel)
+      (autowire-dependencies-satisfying system-map :menu MenuItems)
+      (autowire-dependencies-satisfying system-map :cljs-builder ClojureScriptModule)))
 
 (defn new-system []
   (let [s-map (new-system-map (config))

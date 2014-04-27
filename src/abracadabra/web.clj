@@ -1,13 +1,14 @@
 (ns abracadabra.web
   (:require
-   [bidi.bidi :refer (->Redirect ->ResourcesMaybe)]
+   [bidi.bidi :refer (path-for ->Redirect ->ResourcesMaybe)]
+   [modular.bidi :refer (WebService)]
    [com.stuartsierra.component :as component]
-   [cylon.core :refer (new-optionally-protected-bidi-routes)]
+   ;;[cylon.core :refer (new-optionally-protected-bidi-routes)]
    [hiccup.core :refer (html)]
+   [modular.template :refer (wrap-template TemplateModel)]
    [garden.core :refer (css)]
    [garden.units :refer (pt em)]
-   [garden.color :refer (rgb)]
-   [abracadabra.template :refer (wrap-template)]))
+   [garden.color :refer (rgb)]))
 
 (defn styles [req]
   {:status 200
@@ -25,7 +26,7 @@
                        :padding-top (em 1)
                        }])})
 
-(defn index [handlers]
+(defn index []
   (fn [req]
     {:body
      (html
@@ -35,19 +36,36 @@
        [:p "(edit this code in " [:tt "src/abracadabra/web.clj"] ")"]])}))
 
 (defn make-main-handlers []
-  (let [p (promise)]
-    @(deliver p {:index (wrap-template (index p))
-                 :styles styles})))
+  {:index (wrap-template (index))
+   :styles styles})
 
-(defn make-main-routes [handlers]
+(defn make-main-routes []
   ["/"
-   [["" (->Redirect 307 (:index handlers))]
-    ["index.html" (:index handlers)]
-    ["style.css" (:styles handlers)]
+   [["" (->Redirect 307 :index)]
+    ["index.html" :index]
+    ["style.css" :styles]
     ["" (->ResourcesMaybe {:prefix "public/"})]]])
+
+(defrecord MainRoutes [uri-context]
+  component/Lifecycle
+  (start [this] (assoc this
+                  :handlers (make-main-handlers)
+                  :routes (make-main-routes)))
+
+  (stop [this] this)
+
+  WebService
+  (ring-handler-map [this] (:handlers this))
+  (routes [this] (:routes this))
+  (uri-context [_] uri-context)
+
+  TemplateModel
+  (template-model [_ {{routes :modular.bidi/routes} :request}]
+    {:home-href (path-for routes :index)}))
 
 (defn new-main-routes
   ([] (new-main-routes ""))
   ([context]
-     (new-optionally-protected-bidi-routes
+     (->MainRoutes context)
+     #_(new-optionally-protected-bidi-routes
       (make-main-routes (make-main-handlers)) :context context)))

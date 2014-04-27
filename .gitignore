@@ -1,2 +1,4 @@
 /.nrepl-port
 /target
+/logs
+/logs/abracadabra.log
