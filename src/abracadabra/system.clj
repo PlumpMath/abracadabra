@@ -31,7 +31,7 @@
    [modular.wire-up :refer (autowire-dependencies-satisfying)]
    [modular.clostache :refer (new-clostache-templater)]
    [modular.template :refer (new-single-template new-template-model-contributor TemplateModel)]
-   [modular.menu :refer (new-menu-index MenuItems)]
+   [modular.menu :refer (new-menu-index new-bootstrap-menu MenuItems)]
    [modular.cljs :refer (new-cljs-module new-cljs-builder ClojureScriptModule)]
 
    ;;[cylon.core :refer (new-default-protection-system)]
@@ -73,7 +73,8 @@
    :html-template (make new-single-template config :template "templates/page.html.mustache")
    :module-a (make new-module-a-pages)
    :module-b (make new-module-b-pages)
-   :menu (make new-menu-index)
+   :menu-index (make new-menu-index)
+   :bootstrap-menu (make new-bootstrap-menu)
    :clostache (make new-clostache-templater)
    :ring-binder (make new-ring-binder)
 
@@ -83,23 +84,21 @@
 
    :cljs-core (new-cljs-module :name :cljs :mains ['cljs.core] :dependencies #{})
    :cljs-main (new-cljs-module :name :abracadabra :mains ['abracadabra.main] :dependencies #{:cljs})
-   :cljs-builder (new-cljs-builder)
-   ))
+   :cljs-builder (new-cljs-builder)))
 
 (defn new-dependency-map [system-map]
   (-> {:webserver [:ring-binder]
        :ring-binder {:ring-handler :router}
-       :html-template {:templater :clostache}}
+       :html-template {:templater :clostache}
+       :bootstrap-menu [:menu-index]}
       (autowire-dependencies-satisfying system-map :router WebService)
       (autowire-dependencies-satisfying system-map :ring-binder RingBinding)
       (autowire-dependencies-satisfying system-map :html-template TemplateModel)
-      (autowire-dependencies-satisfying system-map :menu MenuItems)
+      (autowire-dependencies-satisfying system-map :menu-index MenuItems)
       (autowire-dependencies-satisfying system-map :cljs-builder ClojureScriptModule)))
 
 (defn new-system []
   (let [s-map (new-system-map (config))
         d-map (new-dependency-map s-map)]
     (clojure.pprint/pprint d-map)
-    (component/system-using
-     s-map
-     d-map)))
+    (component/system-using s-map d-map)))

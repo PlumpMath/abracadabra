@@ -31,8 +31,8 @@
                  [prismatic/schema "0.2.1"]
                  [http-kit "2.1.13"]
                  [bidi "1.10.3"]
-                 [thheller/shadow-build "0.5.0"]]
-
+                 [thheller/shadow-build "0.5.0"]
+                 [prismatic/plumbing "0.2.2"]]
 
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
                                   [org.clojure/tools.namespace "0.2.4"]]

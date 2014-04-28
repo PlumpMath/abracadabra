@@ -32,7 +32,7 @@
 
   MenuItems                           ; this protocol lets us contribute
   (menu-items [_ _]
-    [{:label "Menu item 4" :order "B1" :href :page-b1}
+    [{:label "Menu item 4" :order "B1" :href :page-b1 :parent "Menu B"}
      ]))
 
 (defn new-module-b-pages []

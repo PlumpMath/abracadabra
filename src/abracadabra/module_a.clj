@@ -106,9 +106,9 @@
 
   MenuItems ; this protocol lets us contribute
   (menu-items [_ context]
-    [{:label "Menu item 1" :order "A1" :href :page-1}
-     {:label "Menu item 2" :order "A2" :href :page-2}
-     {:label "Menu item 3" :order "A3" :href :page-3}]))
+    [{:label "Menu item 1" :order "A1" :href :page-1 :parent "Menu A"}
+     {:label "Menu item 2" :order "A2" :href :page-2 :parent "Menu A"}
+     {:label "Menu item 3" :order "A3" :href :page-3 :parent "Menu A"}]))
 
 ;; By convention, each component has one or more constructors, prefixed
 ;; with 'new-'.
