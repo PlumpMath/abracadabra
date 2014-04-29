@@ -62,7 +62,7 @@
 (defn new-system-map [config]
   (system-map
    :webserver (make new-webserver config :port nil)
-   :router (make new-router)
+   :router (make new-router config :compile-routes? false)
 
    #_:protection-system
    #_(make new-default-protection-system config
