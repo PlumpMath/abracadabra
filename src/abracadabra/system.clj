@@ -66,10 +66,11 @@
 
    #_:protection-system
    #_(make new-default-protection-system config
-         :password-file (io/file (System/getProperty "user.home") ".abracadabra-passwords.edn"))
+           :password-file (io/file (System/getProperty "user.home") ".abracadabra-passwords.edn"))
 
    :main-routes (new-main-routes)
-   :api-routes (new-api-routes)
+   ;; This is eclipsing the main-routes - we need to have some kind of ordering hint on the router, or just leave it to the API designer?
+   ;;   :api-routes (new-api-routes)
    :html-template (make new-single-template config :template "templates/page.html.mustache")
    :module-a (make new-module-a-pages)
    :module-b (make new-module-b-pages)
